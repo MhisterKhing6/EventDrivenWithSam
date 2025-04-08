@@ -22,6 +22,7 @@ jobs:
       
       - name: Build with Maven
         run: mvn clean package
+        run: ls
         working-directory: ./Fun/src
       
       - name: Setup AWS SAM CLI
