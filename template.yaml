@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: S3-Lambda-SNS Event-Driven Architecture with Java 21
+  
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+    Description: Deployment environment
+    
+  EmailToSubScribe:
+    Type: String
+    Description: Email address to subscribe to the SNS topic
+    Default: dondecency11@gmail.com
+    
+Resources:
+  # S3 Bucket to store objects
+  UploadBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'file-upload-bucket-${Environment}-${AWS::AccountId}'
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: 's3:ObjectCreated:*'
+            Function: !GetAtt NotificationFunction.Arn
+    DependsOn: LambdaPermission
+
+  # Lambda function triggered by S3 events (Java 21)
+  NotificationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'file-notification-function-${Environment}'
+      CodeUri: Fun
+      Handler: com.example.NotificationHandler::handleRequest
+      Runtime: java21
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Timeout: 30
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: !Ref NotificationTopic
+          ENVIRONMENT: !Ref Environment
+      Policies:
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt NotificationTopic.TopicName
+
+  # Permission for S3 to invoke Lambda
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref NotificationFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub 'arn:aws:s3:::file-upload-bucket-${Environment}-${AWS::AccountId}'
+
+  # SNS Topic for notifications
+  NotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub 'file-upload-notification-${Environment}'
+      DisplayName: !Sub 'File Upload Notification (${Environment})'
+
+  # Email subscription to SNS topic
+  EmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      TopicArn: !Ref NotificationTopic
+      Endpoint: !Ref EmailToSubScribe
+
+Outputs:
+  BucketName:
+    Description: S3 Bucket for file uploads
+    Value: !Ref UploadBucket
+  LambdaFunction:
+    Description: Lambda function triggered by S3 uploads
+    Value: !Ref NotificationFunction
+  SNSTopic:
+    Description: SNS Topic for notifications
+    Value: !Ref NotificationTopic

@@ -1,0 +1,11 @@
+version = 0.1
+[default.deploy.parameters]
+stack_name = "week8samproject"
+resolve_s3 = true
+s3_prefix = "week8samproject"
+region = "eu-west-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev\" EmailToSubScribe=\"dondecency11@gmail.com\""
+image_repositories = []
+disable_rollback = true

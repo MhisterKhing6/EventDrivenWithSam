@@ -1,0 +1,72 @@
+name: Deploy SAM Application with Java 21
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: Debug project structure
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Directory contents:"
+          ls -la
+          echo "Looking for pom.xml:"
+          find . -name "pom.xml"
+      
+      - name: Build with Maven
+        run: mvn clean package
+      
+      - name: Setup AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      - name: Determine environment
+        id: determine_env
+        run: |
+          if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
+            echo "env=prod" >> $GITHUB_OUTPUT
+          else
+            echo "env=dev" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Debug before SAM build
+        run: |
+          echo "SAM version:"
+          sam --version
+          echo "Directory contents before build:"
+          ls -la
+      
+      - name: Build SAM application
+        run: |
+          sam build --debug
+      
+      - name: Deploy SAM application
+        run: |
+          sam deploy \
+            --stack-name file-notification-service-${{ steps.determine_env.outputs.env }} \
+            --parameter-overrides "Environment=${{ steps.determine_env.outputs.env }} EmailSubscription=${{ secrets.EMAIL_SUBSCRIPTION }}" \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --capabilities CAPABILITY_IAM
