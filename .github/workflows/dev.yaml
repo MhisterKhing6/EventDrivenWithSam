@@ -20,17 +20,9 @@ jobs:
           distribution: 'temurin'
           cache: maven
       
-      - name: Debug project structure
-        run: |
-          echo "Current directory:"
-          pwd
-          echo "Directory contents:"
-          ls -la
-          echo "Looking for pom.xml:"
-          find . -name "pom.xml"
-      
       - name: Build with Maven
         run: mvn clean package
+        working-directory: ./Fun/src
       
       - name: Setup AWS SAM CLI
         uses: aws-actions/setup-sam@v2
@@ -51,16 +43,9 @@ jobs:
             echo "env=dev" >> $GITHUB_OUTPUT
           fi
       
-      - name: Debug before SAM build
-        run: |
-          echo "SAM version:"
-          sam --version
-          echo "Directory contents before build:"
-          ls -la
-      
       - name: Build SAM application
         run: |
-          sam build --debug
+          sam build
       
       - name: Deploy SAM application
         run: |
