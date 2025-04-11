@@ -9,6 +9,7 @@ Parameters:
     AllowedValues:
       - dev
       - prod
+      - testdev
     Description: Deployment environment
     
   EmailToSubScribe:
