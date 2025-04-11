@@ -27,7 +27,12 @@ Resources:
           - Event: 's3:ObjectCreated:*'
             Function: !GetAtt NotificationFunction.Arn
     DependsOn: LambdaPermission
-
+    
+  UploadBucketTest:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'test-file-upload-bucket-${Environment}-${AWS::AccountId}'
+      
   # Lambda function triggered by S3 events (Java 21)
   NotificationFunction:
     Type: AWS::Serverless::Function
