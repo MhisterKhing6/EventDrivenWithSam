@@ -5,7 +5,7 @@ version = 0.1
 [default.deploy]
 [default.deploy.parameters]
 stack_name = "week8samproject-dev"
-s3_bucket = "file-upload-bucket-dev-904233109505"
+s3_bucket = "file-upload-bucket-prod-904233109505"
 s3_prefix = "week8samproject"
 region = "eu-west-1"
 capabilities = "CAPABILITY_IAM"
@@ -17,7 +17,7 @@ disable_rollback = true
 [prod.deploy]
 [prod.deploy.parameters]
 stack_name = "week8samproject-prod"
-s3_bucket = "file-upload-bucket-dev-904233109505"
+s3_bucket = "file-upload-bucket-prod-904233109505"
 s3_prefix = "week8samproject"
 region = "eu-west-1"
 capabilities = "CAPABILITY_IAM"
